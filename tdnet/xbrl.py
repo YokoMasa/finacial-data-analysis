@@ -9,6 +9,18 @@ class Data:
         self.unit_ref = ''
         self.decimals = ''
     
+    def is_forecast(self):
+        if self.context_ref != '':
+            if 'forecast' in self.context_ref.lower():
+                return True
+        return False
+
+    def is_result(self):
+        if self.context_ref != '':
+            if 'result' in self.context_ref.lower():
+                return True
+        return False
+    
     def __str__(self):
         return 'name: %s, text: %s, contextRef: %s, unitRef: %s, decimals: %s' % (self.name, self.text, self.context_ref, self.unit_ref, self.decimals)
 
@@ -19,11 +31,25 @@ class Xbrl:
     CONTEXT_REF_KEY = 'contextRef'
     UNIT_REF_KEY = 'unitRef'
     DECIMALS_KEY = 'decimals'
+    SIGN_KEY = 'sign'
 
     def __init__(self, xbrl_file_path):
         self._ns = {}
-        self.data = {}
+        self.result_data = {}
+        self.forecast_data = {}
         self._parse(xbrl_file_path)
+    
+    def get_result_data_list(self, name):
+        if name in self.result_data:
+            return self.result_data[name]
+        else:
+            return []
+    
+    def get_forecast_data_list(self, name):
+        if name in self.forecast_data:
+            return self.forecast_data[name]
+        else:
+            return []  
 
     def _parse(self, xbrl_file_path):
         with open(xbrl_file_path, encoding='utf8') as file:
@@ -53,8 +79,19 @@ class Xbrl:
             return
         if element.tag.startswith(self._ix_prefix):
             data = self._create_data_obj_from_element(element)
-            if data:
-                print(data)
+            if not data:
+                return
+
+            if data.is_result():
+                if data.name in self.result_data:
+                    self.result_data[data.name].append(data)
+                else:
+                    self.result_data[data.name] = [data]
+            elif data.is_forecast():
+                if data.name in self.forecast_data:
+                    self.forecast_data[data.name].append(data)
+                else:
+                    self.forecast_data[data.name] = [data]
     
     def _create_data_obj_from_element(self, element):
         data = Data()
@@ -67,7 +104,7 @@ class Xbrl:
             else:
                 data.name = raw_name
         
-        #text
+        # text
         if element.text:
             data.text = element.text
         else:
@@ -77,7 +114,22 @@ class Xbrl:
         data.context_ref = element.get(self.CONTEXT_REF_KEY)
         data.unit_ref = element.get(self.UNIT_REF_KEY)
         data.decimals = element.get(self.DECIMALS_KEY)
+
+        # when minus
+        sign = element.get(self.SIGN_KEY)
+        if sign and sign == '-':
+            data.text = '-' + data.text
+            
         return data
 
 if __name__ == '__main__':
     xbrl = Xbrl('sample_xbrl/Summary/tse-acedjpsm-62790-20180405362790-ixbrl.htm')
+    key = 'ChangeInOperatingIncome'
+
+    print('今期実績' + '*' * 40)
+    for data in xbrl.get_result_data_list(key):
+        print('営業利益増加率: %s, contextRef: %s' % (data.text, data.context_ref))
+    print('\r')
+    print('次期予想' + '*' * 40)
+    for data in xbrl.get_forecast_data_list(key):
+        print('営業利益増加率: %s, contextRef: %s' % (data.text, data.context_ref))
