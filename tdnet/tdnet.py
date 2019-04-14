@@ -17,7 +17,9 @@ HEADERS = {
 START_DATE_KEY = 't0'
 END_DATE_KEY = 't1'
 Q_KEY = 'q'
-DATE_FORMAT = '%Y%m%d'
+
+Q_DATE_FORMAT = '%Y%m%d'
+TD_STRP_DATE_FORMAT = '%Y/%m/%d %H:%M'
 
 TD_SELECTOR_TIME = 'td.time'
 TD_SELECTOR_CODE = 'td.code'
@@ -29,12 +31,36 @@ TD_SELECTOR_UPDATE = 'td.update'
 
 MAIN_TABLE_SELECTOR = '#maintable'
 
+
+class TDDocument:
+
+    def __init__(self):
+        self.time = None
+        self.code = 0
+        self.company_name = ''
+        self.doc_name = ''
+        self.xbrl_path = ''
+        self.pdf_path = ''
+    
+    def get_xbrl_file_name(self):
+        return self._extract_file_name_from_path(self.xbrl_path)
+
+    def _extract_file_name_from_path(self, path):
+        stripped = path.rsplit('/', maxsplit=1)
+        if len(stripped) == 2:
+            return stripped[1]
+        else:
+            return stripped[0]
+    
+    def __str__(self):
+        return 'company: %s, doc_name: %s, xbrl: %s, pdf: %s' % (self.company_name, self.doc_name, self.xbrl_path, self.pdf_path)
+
 def search(start_date, end_date, q):
     if not start_date or not end_date:
         raise RuntimeError('date should not be None')
     
-    start_date_string = start_date.strftime(DATE_FORMAT)
-    end_date_string = end_date.strftime(DATE_FORMAT)
+    start_date_string = start_date.strftime(Q_DATE_FORMAT)
+    end_date_string = end_date.strftime(Q_DATE_FORMAT)
     data_dict = {
         START_DATE_KEY: start_date_string,
         END_DATE_KEY: end_date_string,
@@ -47,21 +73,53 @@ def search(start_date, end_date, q):
     request = urllib.request.Request(URL, data, HEADERS)
     response = urllib.request.urlopen(request)
     body = str(response.read())
-    _parse(body)
+    return _parse(body)
 
 def _parse(body):
     soup = BeautifulSoup(body, features='html.parser')
     soup_result = soup.select(MAIN_TABLE_SELECTOR)
+    result_array = []
     if len(soup_result) != 0:
         table_element = soup_result[0]
         for row_element in table_element.find_all('tr'):
-            print(row_element.select(TD_SELECTOR_TIME)[0].get_text())
-            print(row_element.select(TD_SELECTOR_CODE)[0].get_text())
-            print(row_element.select(TD_SELECTOR_COMPANY_NAME)[0].get_text())
-            print(row_element.select(TD_SELECTOR_EXCHANGE)[0].get_text())
-            print(row_element.select(TD_SELECTOR_UPDATE)[0].get_text())
+            doc = TDDocument()
+            el = row_element.select_one(TD_SELECTOR_TIME)
+            if el:
+                doc.time = datetime.datetime.strptime(el.get_text(), TD_STRP_DATE_FORMAT)
+            
+            el = row_element.select_one(TD_SELECTOR_CODE)
+            if el:
+                doc.code = el.get_text()
 
+            el = row_element.select_one(TD_SELECTOR_COMPANY_NAME)
+            if el:
+                doc.company_name = el.get_text()
+
+            el = row_element.select_one(TD_SELECTOR_EXCHANGE)
+            if el:
+                doc.exchange = el.get_text()
+
+            el = row_element.select_one(TD_SELECTOR_UPDATE)
+            if el:
+                doc.update = el.get_text()
+
+            el = row_element.select_one(TD_SELECTOR_XBRL)
+            if el:
+                a = el.find('a')
+                if a:
+                    doc.xbrl_path = a["href"]
+            
+            el = row_element.select_one(TD_SELECTOR_TITLE)
+            if el:
+                a = el.find('a')
+                if a:
+                    doc.doc_name = a.get_text()
+                    doc.pdf_path = a["href"]
+            result_array.append(doc)
+    return result_array
 
 if __name__ == '__main__':
     date = datetime.datetime(2019, 4, 3)
-    search(date, date, '短信')
+    result = search(date, date, '短信')
+    for doc in result:
+        print(doc)
