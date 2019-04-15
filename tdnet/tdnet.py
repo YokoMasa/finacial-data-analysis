@@ -7,7 +7,8 @@ import xml.dom.minidom as minidom
 
 from bs4 import BeautifulSoup
 
-URL = 'https://www.release.tdnet.info/onsf/TDJFSearch/TDJFSearch'
+BASE_URL = 'https://www.release.tdnet.info'
+SEARCH_URL = BASE_URL + '/onsf/TDJFSearch/TDJFSearch'
 HEADERS = {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Origin': 'https://www.release.tdnet.info',
@@ -42,6 +43,15 @@ class TDDocument:
         self.xbrl_path = ''
         self.pdf_path = ''
     
+    def is_pdf_available(self):
+        return self.pdf_path != ''
+
+    def is_xbrl_available(self):
+        return self.xbrl_path != ''
+
+    def get_pdf_file_name(self):
+        return self._extract_file_name_from_path(self.pdf_path)
+    
     def get_xbrl_file_name(self):
         return self._extract_file_name_from_path(self.xbrl_path)
 
@@ -54,6 +64,19 @@ class TDDocument:
     
     def __str__(self):
         return 'company: %s, doc_name: %s, xbrl: %s, pdf: %s' % (self.company_name, self.doc_name, self.xbrl_path, self.pdf_path)
+
+def download_xbrl(doc):
+    if not doc.is_xbrl_available():
+        return
+        
+    try:
+        full_url = BASE_URL + doc.xbrl_path
+        response = urllib.request.urlopen(full_url)
+        with open(doc.get_xbrl_file_name(), mode='w+b') as file:
+            file.write(response.read())
+    except Exception as e:
+        print('Error occurred while downloading pdf')
+        print(e)
 
 def search(start_date, end_date, q):
     if not start_date or not end_date:
@@ -70,7 +93,7 @@ def search(start_date, end_date, q):
     data = urllib.parse.urlencode(data_dict)
     data = data.encode('ascii')
 
-    request = urllib.request.Request(URL, data, HEADERS)
+    request = urllib.request.Request(SEARCH_URL, data, HEADERS)
     response = urllib.request.urlopen(request)
     body = str(response.read())
     return _parse(body)
@@ -119,7 +142,8 @@ def _parse(body):
     return result_array
 
 if __name__ == '__main__':
-    date = datetime.datetime(2019, 4, 3)
+    date = datetime.datetime(2019, 4, 10)
     result = search(date, date, '短信')
-    for doc in result:
-        print(doc)
+    if len(result) != 0:
+        download_xbrl(result[0])
+    
