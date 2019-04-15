@@ -33,11 +33,14 @@ class Xbrl:
     DECIMALS_KEY = 'decimals'
     SIGN_KEY = 'sign'
 
-    def __init__(self, xbrl_file_path):
+    def __init__(self, xbrl_file_path=None, xbrl_string=None):
         self._ns = {}
         self.result_data = {}
         self.forecast_data = {}
-        self._parse(xbrl_file_path)
+        if xbrl_file_path:
+            self._parse(xbrl_file_path)
+        elif xbrl_string:
+            self._parse_string(xbrl_string)
     
     def get_result_data_list(self, name):
         if name in self.result_data:
@@ -66,6 +69,17 @@ class Xbrl:
                     elif event_name == 'end':
                         self._handle_end_event(payload)
                 line = file.readline()
+
+    def _parse_string(self, xbrl_string):
+        parser = ET.XMLPullParser(('start-ns', 'end'))
+        parser.feed(xbrl_string)
+        for event in parser.read_events():
+            event_name = event[0]
+            payload = event[1]
+            if event_name == 'start-ns':
+                self._handle_ns_event(payload)
+            elif event_name == 'end':
+                self._handle_end_event(payload)
     
     def _handle_ns_event(self, ns_data):
         ns_key = ns_data[0]
