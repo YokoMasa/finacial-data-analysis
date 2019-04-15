@@ -74,6 +74,7 @@ def download_xbrl(doc):
         response = urllib.request.urlopen(full_url)
         with open(doc.get_xbrl_file_name(), mode='w+b') as file:
             file.write(response.read())
+        return doc.get_xbrl_file_name()
     except Exception as e:
         print('Error occurred while downloading pdf')
         print(e)
