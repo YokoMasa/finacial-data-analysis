@@ -67,6 +67,7 @@ class TDDocument:
 
 def download_xbrl(doc):
     if not doc.is_xbrl_available():
+        print('xbrl unavailable')
         return
         
     try:

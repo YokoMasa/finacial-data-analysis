@@ -14,6 +14,7 @@ def extract(xbrl_zip_file_path):
                     xbrl_string = file.read()
                     return xbrl.Xbrl(xbrl_string=xbrl_string)
     except Exception as e:
+        print(e)
         return None
 
 if __name__ == '__main__':
