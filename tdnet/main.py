@@ -4,7 +4,7 @@ import tdnet
 import xbrl_extractor
 
 if __name__ == '__main__':
-    date = datetime.datetime(2019, 4, 9)
+    date = datetime.datetime(2019, 4, 22)
     result = tdnet.search(date, date, '短信')
     if len(result) != 0:
         doc = result[0]

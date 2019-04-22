@@ -37,6 +37,7 @@ class Xbrl:
         self._ns = {}
         self.result_data = {}
         self.forecast_data = {}
+        self.other_data = {}
         if xbrl_file_path:
             self._parse(xbrl_file_path)
         elif xbrl_string:
@@ -53,6 +54,16 @@ class Xbrl:
             return self.forecast_data[name]
         else:
             return []  
+    
+    def get_data_list(self, name):
+        result_list = []
+        result_list.extend(self.get_forecast_data_list(name))
+        result_list.extend(self.get_result_data_list(name))
+        if name in self.other_data:
+            result_list.extend(self.other_data[name])
+        #for key in self.other_data:
+        #    print(self.other_data[key][0])
+        return result_list
 
     def _parse(self, xbrl_file_path):
         with open(xbrl_file_path, encoding='utf8') as file:
@@ -106,6 +117,11 @@ class Xbrl:
                     self.forecast_data[data.name].append(data)
                 else:
                     self.forecast_data[data.name] = [data]
+            else:
+                if data.name in self.other_data:
+                    self.other_data[data.name].append(data)
+                else:
+                    self.other_data[data.name] = [data]
     
     def _create_data_obj_from_element(self, element):
         data = Data()
@@ -119,15 +135,16 @@ class Xbrl:
                 data.name = raw_name
         
         # text
-        if element.text:
-            data.text = element.text
+        text = self._extract_text(element)
+        if text:
+            data.text = text
         else:
             return None
 
         # others
-        data.context_ref = element.get(self.CONTEXT_REF_KEY)
-        data.unit_ref = element.get(self.UNIT_REF_KEY)
-        data.decimals = element.get(self.DECIMALS_KEY)
+        data.context_ref = element.get(self.CONTEXT_REF_KEY, '')
+        data.unit_ref = element.get(self.UNIT_REF_KEY, '')
+        data.decimals = element.get(self.DECIMALS_KEY, '')
 
         # when minus
         sign = element.get(self.SIGN_KEY)
@@ -135,10 +152,29 @@ class Xbrl:
             data.text = '-' + data.text
             
         return data
+    
+    def _extract_text(self, element):
+        if element.text:
+            return element.text
+        else:
+            children = list(element)
+            if 1 <= len(children):
+                return self._extract_text(children[0])
+            else:
+                return None
+    
+    def _inspect_recursively(self, element, gen=1):
+        print('gen: %d, tag: %s, text: %s' % (gen, element.tag, element.text))
+        gen += 1
+        for child in list(element):
+            self._inspect_recursively(child, gen)
 
 if __name__ == '__main__':
     xbrl = Xbrl('sample_xbrl/Summary/tse-acedjpsm-62790-20180405362790-ixbrl.htm')
     key = 'ChangeInOperatingIncome'
+    code_key = 'SecuritiesCode'
+    for data in xbrl.get_data_list(code_key):
+        print('コード: %s' % (data.text, ))
 
     print('今期実績' + '*' * 40)
     for data in xbrl.get_result_data_list(key):
