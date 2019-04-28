@@ -5,7 +5,7 @@ import tdnet
 import xbrl_extractor
 
 def main():
-    date = datetime.datetime(2019, 4, 3)
+    date = datetime.datetime(2019, 4, 24)
     result = tdnet.search(date, date, '短信')
     for doc in result:
         time.sleep(3)
