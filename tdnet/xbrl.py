@@ -61,9 +61,14 @@ class Xbrl:
         result_list.extend(self.get_result_data_list(name))
         if name in self.other_data:
             result_list.extend(self.other_data[name])
-        #for key in self.other_data:
-        #    print(self.other_data[key][0])
         return result_list
+    
+    def get_data(self, name):
+        data_list = self.get_data_list(name)
+        if data_list:
+            return data_list[0]
+        else:
+            return None
 
     def _parse(self, xbrl_file_path):
         with open(xbrl_file_path, encoding='utf8') as file:
@@ -172,9 +177,14 @@ class Xbrl:
 if __name__ == '__main__':
     xbrl = Xbrl('sample_xbrl/Summary/tse-acedjpsm-62790-20180405362790-ixbrl.htm')
     key = 'ChangeInOperatingIncome'
+
     code_key = 'SecuritiesCode'
-    for data in xbrl.get_data_list(code_key):
-        print('コード: %s' % (data.text, ))
+    data = xbrl.get_data(code_key)
+    print('コード: %s' % (data.text, ))
+
+    date_key = 'FilingDate'
+    data = xbrl.get_data(date_key)
+    print('日付: %s' % (data.text, ))
 
     print('今期実績' + '*' * 40)
     for data in xbrl.get_result_data_list(key):
