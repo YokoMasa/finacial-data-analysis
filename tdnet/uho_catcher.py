@@ -1,7 +1,9 @@
 import re
+import urllib
 
 import feedparser
 
+import xbrl
 import jp_date
 
 BASE_URL = 'https://resource.ufocatch.com/atom/tdnetx/query/'
@@ -55,14 +57,42 @@ def search(company_code):
         result.append(doc)
     return result
 
-if __name__ == '__main__':
-    def print_doc(doc):
-        print(doc.title)
-        print(doc.pdf_url)
-        print(doc.xbrl_url)
-        print('\r')
+def get_xbrl_from_doc(doc):
+    with urllib.request.urlopen(doc.xbrl_url) as request:
+        return xbrl.Xbrl(xbrl_string=request.read())
 
-    doc = get_tanshin('6273', 2016)
+def get_xbrl(company_code, year):
+    doc = get_tanshin(company_code, year) 
     if doc:
-        print_doc(doc)
+        return get_xbrl_from_doc(doc)
+    else:
+        return None
+
+def test_docs():
+    docs = search_tanshin('2229')
+    for doc in docs:
+        print(doc.title)
+
+def text_xbrl():
+    xbrl = get_xbrl('2229', 2016)
+    if xbrl:
+        code_key = 'SecuritiesCode'
+        data = xbrl.get_data(code_key)
+        print('コード: %s' % (data.text, ))
+
+        date_key = 'FilingDate'
+        data = xbrl.get_data(date_key)
+        print('日付: %s' % (data.text, ))
+
+        key = 'ChangeInOperatingIncome'
+        print('今期実績' + '*' * 40)
+        for data in xbrl.get_result_data_list(key):
+            print('営業利益増加率: %s, contextRef: %s' % (data.text, data.context_ref))
+        print('\r')
+        print('次期予想' + '*' * 40)
+        for data in xbrl.get_forecast_data_list(key):
+            print('営業利益増加率: %s, contextRef: %s' % (data.text, data.context_ref))
+
+if __name__ == '__main__':
+    test_docs()
     

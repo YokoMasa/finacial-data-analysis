@@ -1,3 +1,4 @@
+import re
 import urllib.request
 import urllib.parse
 import datetime
@@ -21,6 +22,8 @@ Q_KEY = 'q'
 
 Q_DATE_FORMAT = '%Y%m%d'
 TD_STRP_DATE_FORMAT = '%Y/%m/%d %H:%M'
+
+TANSHIN_RE = re.compile('(?!(.*半期|.*訂正)).*決算短信.*')
 
 TD_SELECTOR_TIME = 'td.time'
 TD_SELECTOR_CODE = 'td.code'
@@ -80,6 +83,14 @@ def download_xbrl(doc):
         print('Error occurred while downloading pdf')
         print(e)
 
+def search_tanshin(start_date, end_date):
+    result = []
+    docs = search(start_date, end_date, '決算短信')
+    for doc in docs:
+        if TANSHIN_RE.match(doc.doc_name):
+            result.append(doc)
+    return result
+
 def search(start_date, end_date, q):
     if not start_date or not end_date:
         raise RuntimeError('date should not be None')
@@ -97,7 +108,8 @@ def search(start_date, end_date, q):
 
     request = urllib.request.Request(SEARCH_URL, data, HEADERS)
     response = urllib.request.urlopen(request)
-    body = str(response.read())
+    #body = str(response.read())
+    body = response.read().decode('utf-8')
     return _parse(body)
 
 def _parse(body):
@@ -144,8 +156,8 @@ def _parse(body):
     return result_array
 
 if __name__ == '__main__':
-    date = datetime.datetime(2019, 4, 10)
-    result = search(date, date, '短信')
-    if len(result) != 0:
-        download_xbrl(result[0])
+    date = datetime.datetime(2019, 4, 18)
+    result = search_tanshin(date, date)
+    for doc in result:
+        print(doc)
     
