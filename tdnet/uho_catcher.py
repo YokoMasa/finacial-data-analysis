@@ -18,6 +18,9 @@ class UHODocument:
         self.title = ''
         self.pdf_url = ''
         self.xbrl_url = ''
+    
+    def __str__(self):
+        return 'title: %s, pdf_url: %s, xbrl_url: %s' % (self.title, self.pdf_url, self.xbrl_url)
 
 def search_tanshin(company_code, year=None):
     result = []
@@ -69,12 +72,12 @@ def get_xbrl(company_code, year):
         return None
 
 def test_docs():
-    docs = search_tanshin('2229')
+    docs = search_tanshin('2820')
     for doc in docs:
-        print(doc.title)
+        print(doc)
 
-def text_xbrl():
-    xbrl = get_xbrl('2229', 2016)
+def test_xbrl():
+    xbrl = get_xbrl('2820', 2018)
     if xbrl:
         code_key = 'SecuritiesCode'
         data = xbrl.get_data(code_key)
@@ -94,5 +97,5 @@ def text_xbrl():
             print('営業利益増加率: %s, contextRef: %s' % (data.text, data.context_ref))
 
 if __name__ == '__main__':
-    test_docs()
+    test_xbrl()
     

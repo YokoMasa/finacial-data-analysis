@@ -1,3 +1,4 @@
+import os
 import re
 import urllib.request
 import urllib.parse
@@ -7,6 +8,8 @@ from xml.etree.ElementTree import XMLPullParser
 import xml.dom.minidom as minidom
 
 from bs4 import BeautifulSoup
+
+import xbrl_extractor
 
 BASE_URL = 'https://www.release.tdnet.info'
 SEARCH_URL = BASE_URL + '/onsf/TDJFSearch/TDJFSearch'
@@ -82,6 +85,15 @@ def download_xbrl(doc):
     except Exception as e:
         print('Error occurred while downloading pdf')
         print(e)
+
+def get_xbrl(doc):
+    zip_file_name = download_xbrl(doc)
+    if zip_file_name:
+        xbrl = xbrl_extractor.extract(zip_file_name)
+        os.remove(zip_file_name)
+        return xbrl
+    else:
+        return None
 
 def search_tanshin(start_date, end_date):
     result = []

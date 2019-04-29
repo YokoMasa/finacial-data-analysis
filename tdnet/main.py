@@ -2,19 +2,14 @@ import time
 import datetime
 
 import tdnet
-import xbrl_extractor
 
 def main():
     date = datetime.datetime(2019, 4, 24)
-    result = tdnet.search(date, date, '短信')
+    result = tdnet.search_tanshin(date, date)
     for doc in result:
         time.sleep(3)
-        zipfilename = tdnet.download_xbrl(doc)
-        if not zipfilename:
-            print('failed to download xbrl')
-            continue
 
-        xbrl = xbrl_extractor.extract(zipfilename)
+        xbrl = tdnet.get_xbrl(doc)
         if not xbrl:
             print('no xbrl')
             continue
