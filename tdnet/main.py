@@ -224,7 +224,7 @@ def uho_test():
         print_data(xbrl)
 
 def diff_test():
-    date = datetime.datetime(2019, 4, 25)
+    date = datetime.datetime(2019, 4, 24)
     td_docs = tdnet.search_tanshin(date, date)
     for td_doc in td_docs:
         time.sleep(3)
