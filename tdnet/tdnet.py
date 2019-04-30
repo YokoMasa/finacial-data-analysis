@@ -50,6 +50,9 @@ class TDDocument:
         self.xbrl_path = ''
         self.pdf_path = ''
     
+    def get_pdf_url(self):
+        return BASE_URL + self.pdf_path
+    
     def get_hash(self):
         base = '%s%s%s' % (self.code, self.company_name, self.doc_name)
         base_bytes = base.encode('utf-8')
