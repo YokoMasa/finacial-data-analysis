@@ -3,6 +3,7 @@ import datetime
 
 import tdnet
 import uho_catcher
+from history import History
 
 CODE = 'SecuritiesCode'
 COMPANY_NAME = 'CompanyName'
@@ -226,7 +227,16 @@ def uho_test():
 def diff_test():
     date = datetime.datetime(2019, 4, 24)
     td_docs = tdnet.search_tanshin(date, date)
+
+    history = History(date)
+
     for td_doc in td_docs:
+        hash = td_doc.get_hash()
+        if history.has_entry(hash):
+            continue
+        
+        history.add_entry(hash)
+        history.save()
         time.sleep(3)
 
         xbrl = tdnet.get_xbrl(td_doc)
@@ -250,5 +260,5 @@ def diff_test():
         print_diff(xbrl, previous_xbrl)
 
 if __name__ == '__main__':
-    uho_test()
+    diff_test()
     

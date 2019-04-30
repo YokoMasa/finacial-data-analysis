@@ -1,5 +1,6 @@
 import os
 import re
+import hashlib
 import urllib.request
 import urllib.parse
 import datetime
@@ -43,11 +44,18 @@ class TDDocument:
 
     def __init__(self):
         self.time = None
-        self.code = 0
+        self.code = ''
         self.company_name = ''
         self.doc_name = ''
         self.xbrl_path = ''
         self.pdf_path = ''
+    
+    def get_hash(self):
+        base = '%s%s%s' % (self.code, self.company_name, self.doc_name)
+        base_bytes = base.encode('utf-8')
+        m = hashlib.sha1()
+        m.update(base_bytes)
+        return m.hexdigest()
     
     def is_pdf_available(self):
         return self.pdf_path != ''
