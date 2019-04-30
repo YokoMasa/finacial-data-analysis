@@ -212,7 +212,7 @@ def tdnet_test():
         print_data(xbrl)
 
 def uho_test():
-    docs = uho_catcher.search_tanshin('2220')
+    docs = uho_catcher.search_tanshin('1803')
     for doc in docs:
         time.sleep(3)
 
@@ -250,5 +250,5 @@ def diff_test():
         print_diff(xbrl, previous_xbrl)
 
 if __name__ == '__main__':
-    diff_test()
+    uho_test()
     
