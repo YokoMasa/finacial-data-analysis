@@ -12,6 +12,8 @@ FILING_DATE = 'FilingDate'
 NET_SALES = 'ChangeInNetSales'
 OPERATING_INCOME = 'ChangeInOperatingIncome'
 ORDINARY_INCOME = 'ChangeInOrdinaryIncome'
+NET_INCOME = 'ChangeInNetIncome'
+CONSOLIDATED_NET_INCOME = 'ChangeInProfitAttributableToOwnersOfParent'
 
 class FinantialData:
 
@@ -162,6 +164,13 @@ def print_diff(xbrl, previous_xbrl):
         diff = float(data) - float(p_data)
         print('経常利益前期比差分: %f' % (diff, ))
         text += '経常利益前期比差分: %f\r' % (diff, )
+    
+    data = fd.get_result_duration_data(CONSOLIDATED_NET_INCOME, FinantialData.UNIT_CONSOLIDATE)
+    p_data = p_fd.get_forecast_duration_data(CONSOLIDATED_NET_INCOME, FinantialData.UNIT_CONSOLIDATE)
+    if data and p_data:
+        diff = float(data) - float(p_data)
+        print('当期純利益前期比差分: %f' % (diff, ))
+        text += '当期純利益前期比差分: %f\r' % (diff, )
 
     print('---個別差分---')
     text += '\r---個別差分---\r'
@@ -186,6 +195,13 @@ def print_diff(xbrl, previous_xbrl):
         print('経常利益前期比差分: %f' % (diff, ))
         text += '経常利益前期比差分: %f\r' % (diff, )
     
+    data = fd.get_result_duration_data(NET_INCOME, FinantialData.UNIT_NON_CONSOLIDATE)
+    p_data = p_fd.get_forecast_duration_data(NET_INCOME, FinantialData.UNIT_NON_CONSOLIDATE)
+    if data and p_data:
+        diff = float(data) - float(p_data)
+        print('当期純利益前期比差分: %f' % (diff, ))
+        text += '当期純利益前期比差分: %f\r' % (diff, )
+    
     print('---連結次期予想---')
     text += '\r---連結次期予想---\r'
     data = fd.get_forecast_duration_data(NET_SALES, FinantialData.UNIT_CONSOLIDATE)
@@ -200,6 +216,10 @@ def print_diff(xbrl, previous_xbrl):
     if data:
         print('経常利益前期比: %s' % (data, ))
         text += '経常利益前期比: %s\r' % (data, )
+    data = fd.get_forecast_duration_data(CONSOLIDATED_NET_INCOME, FinantialData.UNIT_CONSOLIDATE)
+    if data:
+        print('当期純利益前期比: %s' % (data, ))
+        text += '当期純利益前期比: %s\r' % (data, )
     
     print('---個別次期予想---')
     text += '\r---個別次期予想---\r'
@@ -215,6 +235,10 @@ def print_diff(xbrl, previous_xbrl):
     if data:
         print('経常利益前期比: %s' % (data, ))
         text += '経常利益前期比: %s\r' % (data, )
+    data = fd.get_forecast_duration_data(NET_INCOME, FinantialData.UNIT_NON_CONSOLIDATE)
+    if data:
+        print('当期純利益前期比: %s' % (data, ))
+        text += '当期純利益前期比: %s\r' % (data, )
 
     print('\r\r')
     return text
@@ -249,7 +273,7 @@ def uho_test():
         print_data(xbrl)
 
 def diff_test():
-    date = datetime.datetime(2019, 4, 15)
+    date = datetime.datetime(2019, 4, 17)
     td_docs = tdnet.search_tanshin(date, date)
 
     history = History(date)
