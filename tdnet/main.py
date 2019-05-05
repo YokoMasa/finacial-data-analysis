@@ -1,5 +1,6 @@
 import time
 import datetime
+import traceback
 
 import tdnet
 import uho_catcher
@@ -279,41 +280,45 @@ def diff_test():
     history = History(date)
     slack = Slack()
 
-    header_string = date.strftime('%Y/%m/%d %H:%M:%S') + '\rchecking...'
+    header_string = date.strftime('%Y/%m/%d %H:%M') + '\rチェック開始...'
     slack.post(header_string)
 
-    for td_doc in td_docs:
-        hash = td_doc.get_hash()
-        if history.has_entry(hash):
-            continue
-        
-        history.add_entry(hash)
-        history.save()
-        time.sleep(3)
+    try:
+        for td_doc in td_docs:
+            hash = td_doc.get_hash()
+            if history.has_entry(hash):
+                continue
+            
+            history.add_entry(hash)
+            history.save()
+            time.sleep(3)
 
-        xbrl = tdnet.get_xbrl(td_doc)
-        if not xbrl:
-            print('%s: no xbrl' % (td_doc.doc_name, ))
-            continue
-        
-        data = xbrl.get_data(CODE)
-        if not data:
-            print('could not find company code')
-            continue
-        
-        code = data.text
+            xbrl = tdnet.get_xbrl(td_doc)
+            if not xbrl:
+                print('%s: no xbrl' % (td_doc.doc_name, ))
+                continue
+            
+            data = xbrl.get_data(CODE)
+            if not data:
+                print('could not find company code')
+                continue
+            
+            code = data.text
 
-        last_year = date.year - 1
-        uho_doc = uho_catcher.get_tanshin(code, last_year)
-        previous_xbrl = uho_catcher.get_xbrl_from_doc(uho_doc)
-        if not previous_xbrl:
-            print('could not find previous xbrl')
-            continue
-        
-        text = print_diff(xbrl, previous_xbrl)
-        text += '\r今期短信: %s\r' % (td_doc.get_pdf_url())
-        text += '前期短信: %s\r' % (uho_doc.pdf_url)
-        slack.post(text)
+            last_year = date.year - 1
+            uho_doc = uho_catcher.get_tanshin(code, last_year)
+            previous_xbrl = uho_catcher.get_xbrl_from_doc(uho_doc)
+            if not previous_xbrl:
+                print('could not find previous xbrl')
+                continue
+            
+            text = print_diff(xbrl, previous_xbrl)
+            text += '\r今期短信: %s\r' % (td_doc.get_pdf_url())
+            text += '前期短信: %s\r' % (uho_doc.pdf_url)
+            slack.post(text)
+    except:
+        error = traceback.format_exc()
+        slack.post(error)
 
 if __name__ == '__main__':
     diff_test()
