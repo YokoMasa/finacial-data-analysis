@@ -273,11 +273,14 @@ def uho_test():
         print_data(xbrl)
 
 def diff_test():
-    date = datetime.datetime(2019, 4, 17)
+    date = datetime.datetime.now()
     td_docs = tdnet.search_tanshin(date, date)
 
     history = History(date)
     slack = Slack()
+
+    header_string = date.strftime('%Y/%m/%d %H:%M:%S') + '\rchecking...'
+    slack.post(header_string)
 
     for td_doc in td_docs:
         hash = td_doc.get_hash()
