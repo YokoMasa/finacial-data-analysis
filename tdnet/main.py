@@ -283,8 +283,8 @@ def diff_test():
     header_string = date.strftime('%Y/%m/%d %H:%M') + '\rチェック開始...'
     slack.post(header_string)
 
-    try:
-        for td_doc in td_docs:
+    for td_doc in td_docs:
+        try:
             hash = td_doc.get_hash()
             if history.has_entry(hash):
                 continue
@@ -316,9 +316,9 @@ def diff_test():
             text += '\r今期短信: %s\r' % (td_doc.get_pdf_url())
             text += '前期短信: %s\r' % (uho_doc.pdf_url)
             slack.post(text)
-    except:
-        error = traceback.format_exc()
-        slack.post(error)
+        except:
+            error = traceback.format_exc()
+            slack.post(error)
 
 if __name__ == '__main__':
     diff_test()
