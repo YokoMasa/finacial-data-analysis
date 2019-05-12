@@ -116,7 +116,7 @@ def print_data(xbrl):
         
         print('\r')
 
-def print_diff(xbrl, previous_xbrl):
+def analyze_diff(xbrl, previous_xbrl):
     text = '*' * 20 + '\r'
     text += '---基本情報---\r'
     print('---基本情報---')
@@ -203,46 +203,59 @@ def print_diff(xbrl, previous_xbrl):
         print('当期純利益前期比差分: %f' % (diff, ))
         text += '当期純利益前期比差分: %f\r' % (diff, )
     
+    is_consolidated_result_great = True
     print('---連結次期予想---')
     text += '\r---連結次期予想---\r'
     data = fd.get_forecast_duration_data(NET_SALES, FinantialData.UNIT_CONSOLIDATE)
     if data:
         print('売上高前期比: %s' % (data, ))
         text += '売上高前期比: %s\r' % (data, )
+        if is_minus(data): is_consolidated_result_great = False
     data = fd.get_forecast_duration_data(OPERATING_INCOME, FinantialData.UNIT_CONSOLIDATE)
     if data:
         print('営業利益前期比: %s' % (data, ))
         text += '営業利益前期比: %s\r' % (data, )
+        if is_minus(data): is_consolidated_result_great = False
     data = fd.get_forecast_duration_data(ORDINARY_INCOME, FinantialData.UNIT_CONSOLIDATE)
     if data:
         print('経常利益前期比: %s' % (data, ))
         text += '経常利益前期比: %s\r' % (data, )
+        if is_minus(data): is_consolidated_result_great = False
     data = fd.get_forecast_duration_data(CONSOLIDATED_NET_INCOME, FinantialData.UNIT_CONSOLIDATE)
     if data:
         print('当期純利益前期比: %s' % (data, ))
         text += '当期純利益前期比: %s\r' % (data, )
+        if is_minus(data): is_consolidated_result_great = False
     
+    is_nonconsolidated_result_great = True
     print('---個別次期予想---')
     text += '\r---個別次期予想---\r'
     data = fd.get_forecast_duration_data(NET_SALES, FinantialData.UNIT_NON_CONSOLIDATE)
     if data:
         print('売上高前期比: %s' % (data, ))
         text += '売上高前期比: %s\r' % (data, )
+        if is_minus(data): is_nonconsolidated_result_great = False
     data = fd.get_forecast_duration_data(OPERATING_INCOME, FinantialData.UNIT_NON_CONSOLIDATE)
     if data:
         print('営業利益前期比: %s' % (data, ))
         text += '営業利益前期比: %s\r' % (data, )
+        if is_minus(data): is_nonconsolidated_result_great = False
     data = fd.get_forecast_duration_data(ORDINARY_INCOME, FinantialData.UNIT_NON_CONSOLIDATE)
     if data:
         print('経常利益前期比: %s' % (data, ))
         text += '経常利益前期比: %s\r' % (data, )
+        if is_minus(data): is_nonconsolidated_result_great = False
     data = fd.get_forecast_duration_data(NET_INCOME, FinantialData.UNIT_NON_CONSOLIDATE)
     if data:
         print('当期純利益前期比: %s' % (data, ))
         text += '当期純利益前期比: %s\r' % (data, )
+        if is_minus(data): is_nonconsolidated_result_great = False
 
     print('\r\r')
-    return text
+    return text, is_consolidated_result_great, is_nonconsolidated_result_great
+
+def is_minus(data):
+    return float(data) < 0
 
 def tdnet_test():
     #from_date = datetime.datetime(2019, 4, 24)
@@ -274,14 +287,15 @@ def uho_test():
         print_data(xbrl)
 
 def diff_test():
-    date = datetime.datetime.now()
+    #date = datetime.datetime.now()
+    date = datetime.datetime(2019, 5, 10)
     td_docs = tdnet.search_tanshin(date, date)
 
     history = History(date)
     slack = Slack()
 
     header_string = date.strftime('%Y/%m/%d %H:%M') + '\rチェック開始...'
-    slack.post(header_string)
+    slack.post_main(header_string)
 
     for td_doc in td_docs:
         try:
@@ -312,13 +326,19 @@ def diff_test():
                 print('could not find previous xbrl')
                 continue
             
-            text = print_diff(xbrl, previous_xbrl)
+            result = analyze_diff(xbrl, previous_xbrl)
+
+            text = result[0]
             text += '\r今期短信: %s\r' % (td_doc.get_pdf_url())
             text += '前期短信: %s\r' % (uho_doc.pdf_url)
-            slack.post(text)
+            
+            if result[1] or result[2]:
+                slack.post_great(text)
+            else:    
+                slack.post_main(text)
         except:
             error = traceback.format_exc()
-            slack.post(error)
+            slack.post_error(error)
 
 if __name__ == '__main__':
     diff_test()

@@ -10,5 +10,5 @@ pyvenv.cfg
 pip-selfcheck.json
 */__pycache__
 */history.json
-*/slack_config.txt
+*/slack_config.json
 share
