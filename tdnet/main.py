@@ -287,8 +287,8 @@ def uho_test():
         print_data(xbrl)
 
 def diff_test():
-    #date = datetime.datetime.now()
-    date = datetime.datetime(2019, 5, 10)
+    date = datetime.datetime.now()
+    #date = datetime.datetime(2019, 5, 10)
     td_docs = tdnet.search_tanshin(date, date)
 
     history = History(date)
