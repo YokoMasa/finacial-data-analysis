@@ -204,54 +204,66 @@ def analyze_diff(xbrl, previous_xbrl):
         text += '当期純利益前期比差分: %f\r' % (diff, )
     
     is_consolidated_result_great = True
+    is_consolidated_data_available = False
     print('---連結次期予想---')
     text += '\r---連結次期予想---\r'
     data = fd.get_forecast_duration_data(NET_SALES, FinantialData.UNIT_CONSOLIDATE)
     if data:
+        is_consolidated_data_available = True
         print('売上高前期比: %s' % (data, ))
         text += '売上高前期比: %s\r' % (data, )
         if is_minus(data): is_consolidated_result_great = False
     data = fd.get_forecast_duration_data(OPERATING_INCOME, FinantialData.UNIT_CONSOLIDATE)
     if data:
+        is_consolidated_data_available = True
         print('営業利益前期比: %s' % (data, ))
         text += '営業利益前期比: %s\r' % (data, )
         if is_minus(data): is_consolidated_result_great = False
     data = fd.get_forecast_duration_data(ORDINARY_INCOME, FinantialData.UNIT_CONSOLIDATE)
     if data:
+        is_consolidated_data_available = True
         print('経常利益前期比: %s' % (data, ))
         text += '経常利益前期比: %s\r' % (data, )
         if is_minus(data): is_consolidated_result_great = False
     data = fd.get_forecast_duration_data(CONSOLIDATED_NET_INCOME, FinantialData.UNIT_CONSOLIDATE)
     if data:
+        is_consolidated_data_available = True
         print('当期純利益前期比: %s' % (data, ))
         text += '当期純利益前期比: %s\r' % (data, )
         if is_minus(data): is_consolidated_result_great = False
     
     is_nonconsolidated_result_great = True
+    is_nonconsolidated_data_available = False
     print('---個別次期予想---')
     text += '\r---個別次期予想---\r'
     data = fd.get_forecast_duration_data(NET_SALES, FinantialData.UNIT_NON_CONSOLIDATE)
     if data:
+        is_nonconsolidated_data_available = True
         print('売上高前期比: %s' % (data, ))
         text += '売上高前期比: %s\r' % (data, )
         if is_minus(data): is_nonconsolidated_result_great = False
     data = fd.get_forecast_duration_data(OPERATING_INCOME, FinantialData.UNIT_NON_CONSOLIDATE)
     if data:
+        is_nonconsolidated_data_available = True
         print('営業利益前期比: %s' % (data, ))
         text += '営業利益前期比: %s\r' % (data, )
         if is_minus(data): is_nonconsolidated_result_great = False
     data = fd.get_forecast_duration_data(ORDINARY_INCOME, FinantialData.UNIT_NON_CONSOLIDATE)
     if data:
+        is_nonconsolidated_data_available = True
         print('経常利益前期比: %s' % (data, ))
         text += '経常利益前期比: %s\r' % (data, )
         if is_minus(data): is_nonconsolidated_result_great = False
     data = fd.get_forecast_duration_data(NET_INCOME, FinantialData.UNIT_NON_CONSOLIDATE)
     if data:
+        is_nonconsolidated_data_available = True
         print('当期純利益前期比: %s' % (data, ))
         text += '当期純利益前期比: %s\r' % (data, )
         if is_minus(data): is_nonconsolidated_result_great = False
 
     print('\r\r')
+    is_consolidated_result_great = is_consolidated_result_great if is_consolidated_data_available else False
+    is_nonconsolidated_result_great = is_nonconsolidated_result_great if is_nonconsolidated_data_available else False
     return text, is_consolidated_result_great, is_nonconsolidated_result_great
 
 def is_minus(data):
